@@ -9,4 +9,4 @@ if [[ ! -x .venv/bin/hydra-mlx-demo ]]; then
   .venv/bin/pip install -e '.[dev]'
 fi
 
-exec .venv/bin/hydra-mlx-demo
+exec .venv/bin/hydra-mlx-demo "$@"

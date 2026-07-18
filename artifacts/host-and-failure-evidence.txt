@@ -1,0 +1,29 @@
+Sanitized host and LM Studio evidence
+Captured: 2026-07-18
+
+Host commands
+-------------
+$ sysctl -n hw.memsize
+25769803776
+
+$ system_profiler SPHardwareDataType | grep -E 'Chip|Memory'
+Chip: Apple M4 Pro
+Memory: 24 GB
+
+LM Studio server log excerpts
+-----------------------------
+Source: ~/.lmstudio/server-logs/2026-07/2026-07-14.1.log
+
+[2026-07-14 23:01:00][DEBUG] ValueError: The mlx-vlm batched vision path does
+not support KV cache quantization yet
+[2026-07-14 23:01:01][DEBUG][LLMProcess] Failed to load model: Failed to load model.
+
+[2026-07-14 23:01:57][DEBUG] ValueError: The mlx-vlm batched vision path does
+not support KV cache quantization yet
+[2026-07-14 23:01:57][DEBUG][LLMProcess] Failed to load model: Failed to load model.
+
+Privacy note
+------------
+Only the hardware fields, timestamps, error class, and compatibility message
+needed for this demonstration are reproduced. Prompts, conversations, local
+identifiers, and unrelated log content are excluded.

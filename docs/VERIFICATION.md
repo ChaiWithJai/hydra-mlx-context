@@ -1,43 +1,58 @@
-# Verification report: local context to MLX response
+# Verification report: cold local model to learned troubleshooter
 
-**Story:** A developer approves a user preference, blocks a secret, recalls the
-approved context, and gets a personalized response from a real MLX model through
-LM Studio on localhost.
+**Story:** A local MLX agent starts without the facts required to recommend a
+safe model configuration. After approved context is persisted, a fresh session
+recalls the measured device profile, compatibility runbook, and prior load
+failure, then produces a grounded answer without sending generation to a cloud model.
 
-## Flow status
+## Verified on this machine
 
 | Boundary | Status | Evidence |
 |---|---:|---|
 | Local server discovery | Pass | `/v1/models` returned `ternary-bonsai-27b-mlx` |
-| Policy to persistence | Pass | Explicit preference classified as Memory with `infer=false` |
-| Secret to policy | Pass | `api_key=...` classified `deny`; write count stayed unchanged |
-| Persistence to recall | Pass | One scoped chunk returned with source ID `demo_answer_style` |
-| Recall to prompt | Pass | Existing tests prove capped chunks and `untrusted-evidence` label |
-| Prompt to local model | Pass | LM Studio returned a non-empty answer containing “concise” |
-| Response behavior | Pass | Output followed the recalled three-bullet preference |
-| HydraDB cloud | Not run | No API key was present; production adapter remains contract-tested |
+| Cold context baseline | Pass | 0/3 required troubleshooting facts available |
+| Memory decision | Pass | Measured M4 Pro / 24 GB profile stored with `infer=false` |
+| Knowledge decision | Pass | MLX-VLM compatibility runbook stored as Knowledge |
+| Learning decision | Pass | Twice-observed July 14 load failure classified as Memory with `infer=true` |
+| Secret to policy | Pass | `api_key=...` denied; write count unchanged |
+| Fresh context session | Pass | New store object recovered three chunks |
+| Context benchmark | Pass | Required facts improved from 0/3 to 3/3 |
+| Prompt boundary | Pass | Context capped and labeled `untrusted-evidence` |
+| Local response | Pass | Real model cited M4 Pro, 24 GB, and KV cache facts |
+| HydraDB cloud | Not run | No key is configured on this machine |
 
-## Runtime evidence
+## Observed local-model output
 
-The full immutable transcript is in
-[`artifacts/demo-transcript.txt`](../artifacts/demo-transcript.txt).
+> No, you should not retry the same configuration.
+>
+> You are using an Apple **M4 Pro with 24 GB** of unified memory. The batched
+> vision path does not support **KV cache quantization**, and this model has
+> already failed to load twice due to the same conflict. Disable KV cache
+> quantization or use a compatible non-batched vision path.
 
-The observed model output was:
-
-> 1. I will provide concise code explanations for every query.
-> 2. I will strictly use exactly three short bullets per response.
-> 3. I will prioritize direct solutions over lengthy discussions.
+The measured hardware and two original failure timestamps are preserved in the
+[sanitized evidence capture](../artifacts/host-and-failure-evidence.txt).
 
 ## Automated evidence
 
-- Ruff: passed
-- Pytest: 17 tests passed
-- Live demo assertions: passed
-- Model host restriction: only `127.0.0.1`, `localhost`, or `::1` accepted
+- `ruff check .`: passed
+- `pytest`: 29 tests passed
+- real local-model demo assertions: passed
+- non-loopback model URLs: rejected
+- denied content reaching a writable store: rejected
+- incomplete context benchmark: reports the missing fact labels
 
-## Remaining proof for the competition recording
+## Remaining external proof
 
-Provide a dedicated HydraDB demo key, run `hydra-mlx init`, ingest the preference,
-wait for indexing, and rerun recall through `HydraV2Store`. Record the returned
-source ID but never show the key. Until that run exists, the project must say
-“Hydra-compatible demo” rather than “live HydraDB demo.”
+The implementation now has a strict proof command:
+
+```bash
+HYDRA_DB_API_KEY=... ./demo/run.sh --live
+```
+
+The command cannot silently substitute the lab store. It initializes HydraDB,
+queries a unique collection for the 0/3 baseline, ingests all three approved
+context classes, creates a new SDK client, polls until the complete 3/3 fact set
+is queryable, and then calls the local model with those exact retrieved chunks.
+The final competition recording is not complete until that command passes with
+a dedicated demo key.

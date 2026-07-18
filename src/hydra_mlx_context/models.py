@@ -29,5 +29,9 @@ class ContextStore(Protocol):
     def recall(self, query: str) -> Sequence[ContextChunk]: ...
 
 
+class WritableContextStore(ContextStore, Protocol):
+    def ingest(self, text: str, *, kind: ContextKind, source_id: str, infer: bool) -> object: ...
+
+
 class LocalModel(Protocol):
     def complete(self, *, system: str, user: str) -> str: ...

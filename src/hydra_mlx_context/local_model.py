@@ -9,7 +9,9 @@ class LocalOpenAIModel:
     def __init__(self, *, base_url: str, model: str, api_key: str = "local") -> None:
         parsed = urlparse(base_url)
         if parsed.hostname not in {"127.0.0.1", "localhost", "::1"}:
-            raise ValueError("Local model URL must use a loopback host; cloud fallback is disabled.")
+            raise ValueError(
+                "Local model URL must use a loopback host; cloud fallback is disabled."
+            )
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.api_key = api_key

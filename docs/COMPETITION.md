@@ -9,12 +9,12 @@ The prompt is to pick a confusing developer journey and fix it completely.
 
 ## Chosen journey
 
-**Persistent context for a local Apple Silicon model, with an explicit privacy
-boundary and a clear Memory/Knowledge/`infer` decision path.**
+**A local MLX troubleshooter that remembers the Mac, learns from a real load failure, and
+proves the improvement with a cold-versus-learned context benchmark.**
 
-This is stronger than a broad “MLX integration” page because it produces a
-single demonstrable outcome and resolves the exact conceptual choices named in
-the event brief.
+This is stronger than a broad “MLX integration” page or response-style memory
+because it prevents a concrete repeated failure, measures the missing and
+recalled evidence, and resolves the conceptual choices named in the event brief.
 
 ## Judging thesis
 
@@ -28,6 +28,8 @@ the event brief.
    end-to-end developer journey and highlights the current v1/v2 docs mismatch.
 5. **Ecosystem reach:** one OpenAI-compatible local adapter supports LM Studio and
    other MLX servers without coupling the guide to one GUI.
+6. **Measurable payoff:** a fresh session moves from 0/3 required facts to 3/3,
+   rather than relying on a subjective “the answer looks more personalized.”
 
 ## Competitive frame
 
@@ -49,8 +51,9 @@ local inference, and the policy gate makes that composition legible.
    by `CONTRIBUTING.md`.
 3. Fork `usecortex/mintlify-docs`; add the cookbook and navigation entry.
 4. Run Mintlify preview, link checks, repository checks, and DCO sign-off.
-5. Record a 60–90 second demo: remember preference → ask local model → show
-   personalized answer → show a denied secret.
+5. Record a 60–90 second strict live demo: 0/3 cold baseline → ingest approved
+   Memory and Knowledge → fresh Hydra client → 3/3 recall → grounded local answer
+   → denied secret.
 6. Submit the PR and post it in the event Discord channel before July 24.
 
 ## Acceptance checklist
@@ -58,9 +61,10 @@ local inference, and the policy gate makes that composition legible.
 - [ ] A clean install works on Apple Silicon with Python 3.11+.
 - [ ] LM Studio localhost completion is demonstrated.
 - [ ] An MLX-native server configuration is documented.
-- [ ] Memory and Knowledge each have one successful ingestion example.
+- [ ] Memory and Knowledge each have one successful live ingestion example.
 - [ ] `infer: true` and `infer: false` each have one justified example.
 - [ ] A likely secret is blocked before a network call.
+- [ ] A fresh Hydra client improves required-fact coverage from 0/3 to 3/3.
 - [ ] Recalled context is bounded and marked untrusted.
 - [ ] No private advisory content or implied endorsements are present.
 - [ ] The Mintlify page renders and links only to current v2 primitives.

@@ -1,6 +1,8 @@
-# Hydra MLX Context
+# Hydra MLX Troubleshooter
 
-Persistent, consent-gated context for models that run locally through
+An MLX agent that stops repeating the same setup mistakes. It remembers the
+Mac, learns from previous runtime failures, and never sends secrets to
+persistence. Model generation stays local through
 [MLX](https://github.com/ml-explore/mlx) or
 [LM Studio](https://lmstudio.ai/docs/developer/openai-compat).
 
@@ -8,10 +10,24 @@ This repository is a competition entry and an implementation companion for the
 [HydraDB × Docs hackathon](https://luma.com/event/evt-asAD7QFCSL8GKbf), running
 July 17–24, 2026. The submission fixes one complete developer journey:
 
-> Give a local Apple Silicon model durable memory and project knowledge without
-> misleading users about which data stays on device.
+> Diagnose a local-model configuration using a measured device profile, a shared
+> compatibility runbook, and a real load failure learned from LM Studio
+> logs—without hiding which approved context leaves the Mac.
 
-## Why this should win
+## The proof, not the promise
+
+The demo starts with no context and scores **0/3 required facts**. It then stores:
+
+- the measured M4 Pro / 24 GB profile as explicit Memory;
+- an MLX-VLM compatibility runbook as Knowledge; and
+- a real, twice-observed KV-cache load failure as an inferred Memory outcome.
+
+A fresh context session recalls all three and scores **3/3**. The actual local
+27B MLX model uses them to reject the incompatible configuration and recommend
+disabling KV cache quantization. A credential-shaped write is blocked before
+persistence.
+
+## Why this developer journey matters
 
 Most memory tutorials stop at API calls. This one resolves the decisions that
 cause real integration failures:
@@ -44,7 +60,7 @@ flowchart LR
 The trust boundary is the point, not a footnote. See [the architecture](docs/ARCHITECTURE.md),
 [privacy model](docs/PRIVACY.md), and [competition plan](docs/COMPETITION.md).
 
-## Proven demo
+## Run the demo
 
 With a chat model loaded in LM Studio or another localhost MLX server:
 
@@ -52,10 +68,23 @@ With a chat model loaded in LM Studio or another localhost MLX server:
 ./demo/run.sh
 ```
 
-The demo proves the policy, recall, prompt-boundary, and real local-generation
-flow. When no HydraDB key is configured, persistence uses a clearly labeled,
-deterministic `ContextStore` simulator. See the [90-second demo narrative](docs/DEMO.md)
-and [captured verification report](docs/VERIFICATION.md).
+The default mode is a clearly labeled deterministic lab run. It proves the
+workflow and real localhost generation without claiming a HydraDB network call.
+
+For the competition recording, require real HydraDB and prohibit fallback:
+
+```bash
+HYDRA_DB_API_KEY=... ./demo/run.sh --live
+```
+
+`--live` fails immediately if the key is missing, creates a fresh HydraDB client
+for the second session, waits for indexing, and only passes after all three facts
+are recalled. See the [90-second narrative](docs/DEMO.md) and
+[verification report](docs/VERIFICATION.md).
+
+The repository also includes a
+[sanitized host and failure capture](artifacts/host-and-failure-evidence.txt), so
+the learned incident can be audited without publishing conversations or unrelated logs.
 
 ## Quick start
 
@@ -78,8 +107,8 @@ and [captured verification report](docs/VERIFICATION.md).
    ```bash
    hydra-mlx init
    hydra-mlx classify "I prefer concise code reviews"
-   hydra-mlx remember "I prefer concise code reviews" --allow-egress
-   hydra-mlx ask "How should you review my patch?"
+   hydra-mlx remember "This Mac is an M4 Pro with 24 GB unified memory" --allow-egress
+   hydra-mlx ask "Why did the MLX-VLM configuration fail to load?"
    ```
 
 `--allow-egress` is deliberately required for writes. The CLI refuses likely

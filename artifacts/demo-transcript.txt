@@ -1,50 +1,48 @@
-Hydra MLX Context verification transcript
-Date: 2026-07-18
-Machine boundary: localhost only
+Hydra MLX Troubleshooter verification capture
+Run: ./demo/run.sh
+Mode: SIMULATED · LAB SIMULATOR
+Machine: Apple M4 Pro · 24 GB unified memory
 Local server: LM Studio 0.4.19+2
 Loaded model: ternary-bonsai-27b-mlx
-Hydra credential: absent (deterministic ContextStore simulator used)
+Hydra credential: absent
 
-Preflight evidence
-------------------
-GET http://127.0.0.1:1234/v1/models
-chat model: ternary-bonsai-27b-mlx
-embedding model: text-embedding-nomic-embed-text-v1.5
-
-Command
--------
-./demo/run.sh
-
-Output
-------
-HYDRA MLX CONTEXT — END-TO-END DEMO
-[1/5] LOCAL MODEL     PASS  http://127.0.0.1:1234/v1 · ternary-bonsai-27b-mlx
-[2/5] MEMORY DECISION PASS  memory · infer=false · explicit fact
-[3/5] EGRESS GATE     PASS  credential denied before persistence
-[4/5] CONTEXT RECALL  PASS  1 scoped chunk returned as untrusted evidence
-[5/5] LOCAL RESPONSE  PASS  model used the recalled preference
+HYDRA MLX TROUBLESHOOTER — COLD VS LEARNED DEMO
+MODE: SIMULATED · LAB SIMULATOR
+[1/7] LOCAL MODEL      PASS  http://127.0.0.1:1234/v1 · ternary-bonsai-27b-mlx
+[2/7] COLD BASELINE    0/3  required facts available
+[3/7] CONTEXT LEARNING PASS  device + runbook + inferred load failure
+[4/7] EGRESS GATE      PASS  credential denied before persistence
+[5/7] FRESH SESSION    PASS  recalled 3 context chunks
+[6/7] CONTEXT BENCH    0/3 → 3/3  (device profile, compatibility runbook, prior failure)
+[7/7] LOCAL RESPONSE   PASS  answer cited all three learned facts
 
 MODEL OUTPUT
-1. I will provide concise code explanations for every query.
-2. I will strictly use exactly three short bullets per response.
-3. I will prioritize direct solutions over lengthy discussions.
+No, you should not retry the same configuration. Based on your device profile and
+the compatibility runbook, the failure is caused by a specific incompatibility
+that will persist if you do not change settings.
+
+Here are the facts from your context:
+* Device: You are using an Apple M4 Pro with 24 GB of unified memory.
+* The Issue: The batched vision path does not support KV cache quantization.
+* History: You have already seen this model fail to load twice due to this exact conflict.
+
+Recommendation: To resolve the loading failure, disable KV cache quantization
+before retrying. Alternatively, use a compatible non-batched vision path.
 
 DEMO RESULT: PASS
-BOUNDARY NOTE: persistence used the in-memory ContextStore simulator; set
-HYDRA_DB_API_KEY to exercise the production HydraV2Store adapter.
+LAB NOTE: context persistence used the deterministic simulator. Run
+./demo/run.sh --live for competition proof.
 
-Automated verification
-----------------------
-ruff check .  -> All checks passed
-pytest        -> 17 passed in 0.05s
+Locally corroborated evidence:
+- `system_profiler`: Apple M4 Pro, 24 GB
+- LM Studio July 14 log: the same MLX-VLM load failed twice because the batched
+  vision path does not support KV cache quantization
+- LM Studio localhost: actual `ternary-bonsai-27b-mlx` generation
 
-Claim boundary
---------------
-Proven live: localhost model discovery, actual MLX generation, local secret
-denial, scoped ContextStore recall, bounded untrusted-context prompt, and output
-personalization.
+Contract-tested:
+- HydraDB 2.x Memory and Knowledge ingestion payloads
+- HydraDB 2.x response mapping
+- strict --live credential requirement and no silent fallback
 
-Contract-tested: HydraDB 2.x SDK adapter and response mapping.
-
-Not claimed: a live HydraDB cloud write or recall. No HYDRA_DB_API_KEY was
-available on this machine during the recorded run.
+Not claimed:
+- a live HydraDB cloud write or recall; no HYDRA_DB_API_KEY was configured

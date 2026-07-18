@@ -14,8 +14,9 @@
 | Class | Default | Example |
 |---|---|---|
 | Public project information | Ask / allow | Public README |
-| Personal preference | Ask / allow as Memory | Response style preference |
-| Shared project knowledge | Ask / allow as Knowledge | Public architecture guide |
+| Device-specific fact | Ask / allow as Memory | Approved chip and RAM profile |
+| Shared project knowledge | Ask / allow as Knowledge | MLX-VLM compatibility runbook |
+| Runtime outcome | Ask / summarize as Memory | Consented load-failure result |
 | Credential or token | Deny | `sk-...`, private key |
 | Private advisory note | Deny | Unpublished reviewer feedback |
 | Captured conversation | Deny unless deliberately summarized | Raw transcript |

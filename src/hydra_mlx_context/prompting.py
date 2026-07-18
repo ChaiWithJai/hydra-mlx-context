@@ -15,9 +15,9 @@ def render_context(
 ) -> str:
     selected = chunks[:max_chunks]
     if not selected:
-        return "<HYDRA_CONTEXT status=\"empty\" />"
+        return '<HYDRA_CONTEXT status="empty" />'
 
-    rendered: list[str] = ["<HYDRA_CONTEXT trust=\"untrusted-evidence\">"]
+    rendered: list[str] = ['<HYDRA_CONTEXT trust="untrusted-evidence">']
     for index, chunk in enumerate(selected, start=1):
         text = chunk.text[:max_chars_per_chunk]
         rendered.append(

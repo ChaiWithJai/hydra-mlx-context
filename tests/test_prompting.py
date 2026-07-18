@@ -3,10 +3,7 @@ from hydra_mlx_context.prompting import build_user_prompt, render_context
 
 
 def test_context_is_bounded_and_labeled_untrusted() -> None:
-    chunks = [
-        ContextChunk(text="x" * 20, source_id=f"s{i}", title=f"T{i}")
-        for i in range(10)
-    ]
+    chunks = [ContextChunk(text="x" * 20, source_id=f"s{i}", title=f"T{i}") for i in range(10)]
     rendered = render_context(chunks, max_chunks=2, max_chars_per_chunk=5)
     assert 'trust="untrusted-evidence"' in rendered
     assert rendered.count("<SOURCE ") == 2

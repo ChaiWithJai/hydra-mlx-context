@@ -2,80 +2,85 @@
 
 ## The one-sentence story
 
-A local MLX model remembers how the user wants coding answers, rejects a secret
-before persistence, recalls the approved preference as untrusted evidence, and
-uses it to produce a personalized response without calling a cloud model.
+Hydra keeps a local MLX agent from repeating the same setup mistake: it
+remembers the Mac, learns from an actual LM Studio load failure, and never
+uploads secrets.
 
 ## Run it
 
-Load a chat model in LM Studio, start its local server, then run:
+Load a chat model in LM Studio, start its local server, then choose the proof level.
 
 ```bash
+# Development: deterministic persistence simulator + real local model
 ./demo/run.sh
+
+# Final recording: real HydraDB + real local model, with fallback prohibited
+HYDRA_DB_API_KEY=... ./demo/run.sh --live
 ```
 
-The runner discovers the first non-embedding model from the localhost `/models`
-endpoint. Override either value when needed:
-
-```bash
-LOCAL_LLM_BASE_URL=http://127.0.0.1:8080/v1 \
-LOCAL_LLM_MODEL=your-model-id \
-./demo/run.sh
-```
+The runner discovers the first non-embedding localhost model. Override
+`LOCAL_LLM_BASE_URL`, `LOCAL_LLM_MODEL`, `HYDRA_DATABASE`, or
+`HYDRA_COLLECTION` when needed.
 
 ## 90-second spoken narrative
 
-**0–12 seconds — the problem**
+**0–10 seconds — the human problem**
 
-“Local models give us private, low-latency inference, but they forget everything
-when the session ends. Adding cloud memory can quietly break the privacy promise.”
+“Local models are private and fast, but they repeat setup mistakes because a new
+session does not know this Mac or what failed yesterday.”
 
-**12–25 seconds — the architecture**
+**10–20 seconds — establish the baseline**
 
-“Hydra MLX Context separates those concerns. MLX or LM Studio generates on this
-Mac. A policy gate decides what may become Hydra Memory or Knowledge. Recalled
-content comes back inside a bounded, explicitly untrusted context block.”
+Point to `COLD BASELINE 0/3`. “The demo queries a unique, isolated Hydra
+collection before ingestion. It has none of the three facts needed for a safe
+recommendation: the device, the compatibility rule, or the previous failure.”
 
-**25–42 seconds — the correct memory decision**
+**20–40 seconds — show why Hydra is necessary**
 
-Point to `[2/5]`. “This preference is about one user, so it is Memory. It is
-already an explicit fact, so `infer` is false. We do not ask Hydra to reinterpret
-something we already know.”
+Point to `CONTEXT LEARNING`. “The measured M4 Pro with 24 GB is personal Memory.
+The MLX-VLM compatibility runbook is Knowledge. The July 14 log records two load
+failures caused by KV cache quantization; that raw interaction becomes Memory
+with inference enabled, so Hydra can derive a durable outcome.”
 
-**42–55 seconds — the trust moment**
+**40–52 seconds — earn trust**
 
-Point to `[3/5]`. “Now I try a credential-shaped value. It is denied before the
-persistence adapter is called. The write counter does not change. Local inference
-is not used as an excuse to obscure remote data movement.”
+Point to `EGRESS GATE`. “Local inference does not mean all data stays local.
+Every write requires consent, and this credential is rejected before the Hydra
+adapter is called.”
 
-**55–75 seconds — recall and generation**
+**52–70 seconds — prove persistence, not chat history**
 
-Point to `[4/5]` and the model output. “The context store returns one scoped
-preference. The prompt builder labels it untrusted evidence. The actual MLX model
-running in LM Studio uses that preference and answers concisely in three bullets.”
+Point to `FRESH SESSION` and `0/3 → 3/3`. “I create a new Hydra client and query
+again. All three facts return across the session boundary. This is the measured
+difference between a cold local model and a context-aware one.”
 
-**75–90 seconds — why Hydra**
+**70–86 seconds — the winner moment**
 
-“The demo store is deterministic because this machine has no Hydra key configured.
-The production adapter is already wired to HydraDB v2’s database, context ingestion,
-and unified query APIs. Add the key and the persistence boundary swaps in without
-changing the model or prompt pipeline. That is the developer journey this guide fixes.”
+Point to the model response. “The actual 27B MLX model running on this Mac cites
+the M4 Pro, 24 GB profile, compatibility rule, and two previous failures. It
+rejects the unchanged configuration and recommends disabling KV cache
+quantization.”
 
-## What the proof establishes
+**86–90 seconds — close**
 
-| Boundary | Evidence |
-|---|---|
-| Local server is real | `/v1/models` returns the loaded MLX model and chat completion succeeds |
-| Memory decision works | Explicit preference becomes Memory with `infer=false` |
-| Secret gate works | Credential is denied before the store write counter changes |
-| Recall contract works | The persisted preference returns through `ContextStore.recall` |
-| Prompt boundary works | Context is bounded and labeled `untrusted-evidence` |
-| Generation works | The localhost model’s output reflects the recalled preference |
-| Hydra SDK contract works | Adapter tests use the installed HydraDB 2.x response fields |
+“Hydra remembers and relates the evidence; MLX keeps generation local; the
+policy gate makes the boundary honest.”
 
-## Honest limitation
+## What each mode proves
 
-This proof does not claim a live HydraDB cloud write when `HYDRA_DB_API_KEY` is
-absent. The demo uses a deterministic in-memory implementation of the exact same
-`ContextStore` interface. A live submission recording should rerun with a dedicated
-demo key and show the Hydra source ID and successful recall without exposing the key.
+| Claim | Lab mode | `--live` mode |
+|---|---:|---:|
+| Real localhost model discovery and generation | Yes | Yes |
+| Memory/Knowledge/inference decisions | Yes | Yes |
+| Secret blocked before adapter call | Yes | Yes |
+| Fresh-session recovery and 0/3 → 3/3 benchmark | Deterministic simulator | HydraDB |
+| Live HydraDB write and query | No | Yes |
+| Silent fallback possible | No; mode is labeled | No; missing key is fatal |
+
+## Recording checklist
+
+- Keep the terminal large enough to show the mode and seven checks.
+- Start the recording only after the local model and Hydra database are ready.
+- Run `./demo/run.sh --live`; never record lab mode as Hydra proof.
+- Show the database and collection names printed at the end, never the key.
+- End on the 0/3 → 3/3 line and the grounded local response.

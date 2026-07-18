@@ -4,8 +4,10 @@
 
 Local model runners solve inference privacy and latency. They do not solve
 durable, structured context. HydraDB can provide persistence and graph-aware
-recall, but it introduces a remote data boundary. Hydra MLX Context makes that
-boundary visible and consent-gated.
+recall, but it introduces a remote data boundary. Hydra MLX Troubleshooter uses
+that composition for one measurable workflow: recover the device profile, sizing
+runbook, and prior runtime failure in a fresh session, while keeping the boundary
+visible and consent-gated.
 
 ## Components
 
@@ -17,6 +19,8 @@ boundary visible and consent-gated.
    caps the number and size of chunks.
 4. **Local OpenAI adapter** calls only an explicitly configured loopback URL.
 5. **CLI** makes egress intentional. Writes require `--allow-egress`.
+6. **Context benchmark** tests the required evidence, not model vibes: cold
+   context is 0/3 and the learned session must recover all 3/3 facts.
 
 ## Runtime sequence
 
@@ -62,6 +66,7 @@ prompt and policy behavior without network access.
 | Prompt injection in recalled text | Delimit as untrusted evidence; system rules remain outside it |
 | Ingestion still indexing | Poll only to a bounded timeout; report the source ID |
 | API version mismatch | Surface an actionable v2 contract error; do not silently try legacy endpoints |
+| Missing live-demo credential | `--live` exits; it never substitutes the simulator |
 
 ## Scope model
 

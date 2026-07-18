@@ -26,9 +26,7 @@ class HydraV2Store:
                 type="memory",
                 database=self.database,
                 collection=self.collection,
-                memories=json.dumps(
-                    [{"id": source_id, "text": text, "infer": infer}]
-                ),
+                memories=json.dumps([{"id": source_id, "text": text, "infer": infer}]),
             )
         return self.client.context.ingest(
             type="knowledge",

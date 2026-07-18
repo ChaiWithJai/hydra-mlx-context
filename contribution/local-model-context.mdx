@@ -1,11 +1,12 @@
 ---
-title: "Give a local MLX model persistent context"
-description: "Combine HydraDB v2 context with an OpenAI-compatible model running locally on Apple Silicon."
+title: "Stop a local MLX agent from repeating setup failures"
+description: "Use HydraDB Memory and Knowledge with an OpenAI-compatible model running locally on Apple Silicon."
 ---
 
-Local inference keeps generation on your Mac. Persistent context is a separate
-system. This guide connects an MLX or LM Studio server on `localhost` to HydraDB
-without hiding the network boundary.
+Local inference keeps generation on your Mac, but a new session does not know
+your hardware or what failed yesterday. This guide builds a small troubleshooter
+that combines an approved device profile, a shared compatibility runbook, and a
+learned load failure without hiding the network boundary.
 
 <Warning>
   HydraDB is a remote context service. Only context you explicitly ingest is
@@ -17,9 +18,9 @@ without hiding the network boundary.
 
 | Input | HydraDB type | `infer` |
 |---|---|---:|
-| Explicit user preference | `memory` | `false` |
-| Raw dialogue with an implicit preference | `memory` | `true` |
-| Project documentation | `knowledge` | not applicable |
+| Approved M4 Pro / 24 GB profile | `memory` | `false` |
+| Raw log showing two failed loads | `memory` | `true` |
+| Shared MLX-VLM compatibility runbook | `knowledge` | not applicable |
 | Credential or private note | Do not ingest | not applicable |
 
 Use one stable database as the isolation boundary and one collection for this
@@ -37,7 +38,7 @@ export LOCAL_LLM_MODEL="your-loaded-model"
 LM Studio exposes an OpenAI-compatible endpoint on port 1234 by default. An MLX
 server can use the same adapter; set `LOCAL_LLM_BASE_URL` to its loopback URL.
 
-## Ingest one explicit memory
+## Ingest the troubleshooting evidence
 
 ```python
 import json
@@ -56,16 +57,53 @@ client.context.ingest(
     collection="user_jai",
     memories=json.dumps([
         {
-            "id": "answer_style",
-            "text": "The user prefers concise answers with runnable examples.",
+            "id": "device_profile",
+            "text": (
+                "This Mac is an Apple M4 Pro with 24 GB unified memory and uses "
+                "the LM Studio MLX backend."
+            ),
             "infer": False,
         }
     ]),
 )
+
+client.context.ingest(
+    type="knowledge",
+    database="local_assistant",
+    collection="user_jai",
+    app_knowledge=json.dumps([{
+        "id": "mlx_vlm_compatibility",
+        "database": "local_assistant",
+        "collection": "user_jai",
+        "title": "MLX-VLM compatibility runbook",
+        "type": "custom",
+        "content": {
+            "text": (
+                "The batched vision path does not support KV cache quantization. "
+                "Disable it before retrying or use a compatible non-batched path."
+            )
+        },
+    }]),
+)
+
+client.context.ingest(
+    type="memory",
+    database="local_assistant",
+    collection="user_jai",
+    memories=json.dumps([{
+        "id": "load_failure_outcome",
+        "text": (
+            "Interaction log from July 14: an MLX-VLM model failed to load twice "
+            "because the batched vision path does not support KV cache quantization."
+        ),
+        "infer": True,
+    }]),
+)
 ```
 
-The sentence is already a durable fact, so `infer` is `false`. Use `true` only
-when HydraDB must extract the preference from raw, consented dialogue or events.
+The device profile is already a durable fact, so `infer` is `false`. The runtime
+log is a raw, consented event from which HydraDB should derive a reusable outcome,
+so it uses `true`. Knowledge does not use the memory inference flag.
 
 ## Recall both stores
 
@@ -73,7 +111,10 @@ when HydraDB must extract the preference from raw, consented dialogue or events.
 result = client.query(
     database="local_assistant",
     collection="user_jai",
-    query="How should I explain this API?",
+    query=(
+        "Should I retry this MLX-VLM configuration? Use its device profile, "
+        "the compatibility runbook, and any prior failure."
+    ),
     type="all",
     query_by="hybrid",
     mode="thinking",
@@ -107,7 +148,7 @@ response = httpx.post(
             {
                 "role": "user",
                 "content": f"<HYDRA_CONTEXT>\n{context}\n</HYDRA_CONTEXT>\n\n"
-                           "How should I explain this API?",
+                           "Should I retry the same MLX-VLM configuration?",
             },
         ],
         "temperature": 0.2,
@@ -120,12 +161,14 @@ print(response.json()["choices"][0]["message"]["content"])
 
 ## Verify the boundary
 
-Before calling this complete, verify all four behaviors:
+Before calling this complete, verify these behaviors:
 
 1. The model endpoint uses `localhost` or a loopback IP.
-2. An explicit preference is ingested as Memory with `infer: false`.
-3. Shared project material is ingested as Knowledge in the same intended scope.
-4. A credential-shaped string is rejected before any HydraDB write.
+2. The device profile is ingested as Memory with `infer: false`.
+3. The runtime log is ingested as Memory with `infer: true`.
+4. The compatibility runbook is ingested as Knowledge in the same intended scope.
+5. A fresh client recalls all three required facts.
+6. A credential-shaped string is rejected before any HydraDB write.
 
 <Info>
   For production, add a consent UI, secret scanning, bounded indexing polls, and

@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from .hydra import HydraV2Store
 from .local_model import LocalOpenAIModel
 from .models import ContextKind
-from .pipeline import answer
+from .pipeline import answer, ingest_approved
 from .policy import classify
 
 
@@ -78,8 +78,11 @@ def main(argv: list[str] | None = None) -> int:
                 "Re-run with --allow-egress after reviewing the content."
             )
         source_id = args.source_id or f"local_{uuid.uuid4().hex}"
-        _store().ingest(
-            args.text, kind=result.kind, source_id=source_id, infer=result.infer
+        ingest_approved(
+            args.text,
+            store=_store(),
+            source_id=source_id,
+            requested=requested,
         )
         print(f"Accepted for ingestion: {source_id}")
         return 0
