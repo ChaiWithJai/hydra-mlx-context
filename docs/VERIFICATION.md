@@ -24,8 +24,8 @@ The full immutable transcript is in
 
 The observed model output was:
 
-> 1. I will provide concise code explanations for every query.  
-> 2. I will strictly use exactly three short bullets per response.  
+> 1. I will provide concise code explanations for every query.
+> 2. I will strictly use exactly three short bullets per response.
 > 3. I will prioritize direct solutions over lengthy discussions.
 
 ## Automated evidence
