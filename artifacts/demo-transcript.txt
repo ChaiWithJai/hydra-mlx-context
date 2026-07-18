@@ -1,0 +1,50 @@
+Hydra MLX Context verification transcript
+Date: 2026-07-18
+Machine boundary: localhost only
+Local server: LM Studio 0.4.19+2
+Loaded model: ternary-bonsai-27b-mlx
+Hydra credential: absent (deterministic ContextStore simulator used)
+
+Preflight evidence
+------------------
+GET http://127.0.0.1:1234/v1/models
+chat model: ternary-bonsai-27b-mlx
+embedding model: text-embedding-nomic-embed-text-v1.5
+
+Command
+-------
+./demo/run.sh
+
+Output
+------
+HYDRA MLX CONTEXT — END-TO-END DEMO
+[1/5] LOCAL MODEL     PASS  http://127.0.0.1:1234/v1 · ternary-bonsai-27b-mlx
+[2/5] MEMORY DECISION PASS  memory · infer=false · explicit fact
+[3/5] EGRESS GATE     PASS  credential denied before persistence
+[4/5] CONTEXT RECALL  PASS  1 scoped chunk returned as untrusted evidence
+[5/5] LOCAL RESPONSE  PASS  model used the recalled preference
+
+MODEL OUTPUT
+1. I will provide concise code explanations for every query.
+2. I will strictly use exactly three short bullets per response.
+3. I will prioritize direct solutions over lengthy discussions.
+
+DEMO RESULT: PASS
+BOUNDARY NOTE: persistence used the in-memory ContextStore simulator; set
+HYDRA_DB_API_KEY to exercise the production HydraV2Store adapter.
+
+Automated verification
+----------------------
+ruff check .  -> All checks passed
+pytest        -> 17 passed in 0.05s
+
+Claim boundary
+--------------
+Proven live: localhost model discovery, actual MLX generation, local secret
+denial, scoped ContextStore recall, bounded untrusted-context prompt, and output
+personalization.
+
+Contract-tested: HydraDB 2.x SDK adapter and response mapping.
+
+Not claimed: a live HydraDB cloud write or recall. No HYDRA_DB_API_KEY was
+available on this machine during the recorded run.

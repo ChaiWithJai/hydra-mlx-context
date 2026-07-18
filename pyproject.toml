@@ -21,6 +21,7 @@ dev = ["pytest>=8,<9", "ruff>=0.5,<1"]
 
 [project.scripts]
 hydra-mlx = "hydra_mlx_context.cli:main"
+hydra-mlx-demo = "hydra_mlx_context.demo:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hydra_mlx_context"]

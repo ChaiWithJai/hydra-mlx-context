@@ -44,6 +44,19 @@ flowchart LR
 The trust boundary is the point, not a footnote. See [the architecture](docs/ARCHITECTURE.md),
 [privacy model](docs/PRIVACY.md), and [competition plan](docs/COMPETITION.md).
 
+## Proven demo
+
+With a chat model loaded in LM Studio or another localhost MLX server:
+
+```bash
+./demo/run.sh
+```
+
+The demo proves the policy, recall, prompt-boundary, and real local-generation
+flow. When no HydraDB key is configured, persistence uses a clearly labeled,
+deterministic `ContextStore` simulator. See the [90-second demo narrative](docs/DEMO.md)
+and [captured verification report](docs/VERIFICATION.md).
+
 ## Quick start
 
 1. Start an OpenAI-compatible local server.
@@ -80,6 +93,7 @@ secrets and does not upload files implicitly.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): data flow, failure modes, and interfaces.
 - [`docs/PRIVACY.md`](docs/PRIVACY.md): egress contract and non-endorsement policy.
 - [`docs/COMPETITION.md`](docs/COMPETITION.md): judging thesis and delivery sequence.
+- [`docs/DEMO.md`](docs/DEMO.md): runnable proof and spoken demo narrative.
 
 ## Honest limitations
 
