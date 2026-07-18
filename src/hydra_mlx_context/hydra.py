@@ -90,6 +90,20 @@ class HydraV2Store:
             )
         return chunks
 
+    def source_statuses(self, source_ids: Sequence[str]) -> dict[str, str]:
+        response = self.client.context.status(
+            database=self.database,
+            collection=self.collection,
+            ids=list(source_ids),
+        )
+        raw_statuses = getattr(response.data, "statuses", None) or []
+        return {
+            _field(status, "id", default="unknown"): _field(
+                status, "indexing_status", default="unknown"
+            )
+            for status in raw_statuses
+        }
+
 
 def _field(value: Any, *names: str, default: str) -> str:
     for name in names:

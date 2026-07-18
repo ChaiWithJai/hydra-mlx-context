@@ -1,4 +1,7 @@
-from hydra_mlx_context.benchmark import score_troubleshooting_context
+from hydra_mlx_context.benchmark import (
+    score_troubleshooting_context,
+    score_troubleshooting_probes,
+)
 from hydra_mlx_context.demo import COMPATIBILITY_RUNBOOK, DEVICE_PROFILE, FAILURE_SIGNAL
 from hydra_mlx_context.models import ContextChunk
 
@@ -24,3 +27,14 @@ def test_partial_context_reports_the_missing_facts() -> None:
     result = score_troubleshooting_context([ContextChunk(text=DEVICE_PROFILE)])
     assert result.passed == ("device profile",)
     assert result.missing == ("compatibility runbook", "prior failure")
+
+
+def test_focused_probes_do_not_let_one_source_mask_another() -> None:
+    results = {
+        "device profile": [ContextChunk(text=DEVICE_PROFILE)],
+        "compatibility runbook": [ContextChunk(text=COMPATIBILITY_RUNBOOK)],
+        "prior failure": [],
+    }
+    result = score_troubleshooting_probes(results)
+    assert result.passed == ("device profile", "compatibility runbook")
+    assert result.missing == ("prior failure",)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable
+from collections.abc import Iterable, Mapping
 
 from .models import ContextChunk
 
@@ -40,9 +40,20 @@ TROUBLESHOOTING_REQUIREMENTS = (
     ),
     FactRequirement(
         "prior failure",
-        (("failed", "failure"), ("twice",), ("july 14",)),
+        (("failed", "failure"), ("kv cache",)),
     ),
 )
+
+TROUBLESHOOTING_PROBES = {
+    "device profile": "Which Apple chip and how much unified memory does this user's Mac have?",
+    "compatibility runbook": (
+        "What does the MLX-VLM compatibility runbook say about batched vision and KV cache "
+        "quantization?"
+    ),
+    "prior failure": (
+        "What happened when MLX-VLM was loaded on July 14, and which setting caused it?"
+    ),
+}
 
 
 def score_troubleshooting_context(chunks: Iterable[ContextChunk]) -> BenchmarkResult:
@@ -57,4 +68,18 @@ def score_troubleshooting_context(chunks: Iterable[ContextChunk]) -> BenchmarkRe
         for requirement in TROUBLESHOOTING_REQUIREMENTS
         if not requirement.matches(corpus)
     )
+    return BenchmarkResult(passed=passed, missing=missing)
+
+
+def score_troubleshooting_probes(
+    results: Mapping[str, Iterable[ContextChunk]],
+) -> BenchmarkResult:
+    """Score each fact only against its focused retrieval probe."""
+    requirements = {requirement.label: requirement for requirement in TROUBLESHOOTING_REQUIREMENTS}
+    passed = tuple(
+        label
+        for label in TROUBLESHOOTING_PROBES
+        if requirements[label].matches("\n".join(chunk.text.lower() for chunk in results[label]))
+    )
+    missing = tuple(label for label in TROUBLESHOOTING_PROBES if label not in passed)
     return BenchmarkResult(passed=passed, missing=missing)

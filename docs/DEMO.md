@@ -51,8 +51,10 @@ adapter is called.”
 **52–70 seconds — prove persistence, not chat history**
 
 Point to `FRESH SESSION` and `0/3 → 3/3`. “I create a new Hydra client and query
-again. All three facts return across the session boundary. This is the measured
-difference between a cold local model and a context-aware one.”
+again. Three focused queries independently recover the device, rule, and failure
+across the session boundary. Similar KV-cache wording in the runbook cannot mask
+a missing failure Memory. This is the measured difference between a cold local
+model and a context-aware one.”
 
 **70–86 seconds — the winner moment**
 
@@ -84,3 +86,12 @@ policy gate makes the boundary honest.”
 - Run `./demo/run.sh --live`; never record lab mode as Hydra proof.
 - Show the database and collection names printed at the end, never the key.
 - End on the 0/3 → 3/3 line and the grounded local response.
+
+## Captured live result
+
+The July 18, 2026 run passed all seven checks with `MODE: LIVE · NO FALLBACK`.
+Hydra exposed the sources asynchronously (`queued`, `processing`,
+`graph_creation`, and `completed`); the runner waited for searchable statuses
+and a 3/3 focused retrieval score before creating the fresh proof client. The
+complete sanitized output is in
+[`artifacts/demo-transcript.txt`](../artifacts/demo-transcript.txt).

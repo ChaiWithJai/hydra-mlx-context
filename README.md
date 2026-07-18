@@ -78,9 +78,14 @@ HYDRA_DB_API_KEY=... ./demo/run.sh --live
 ```
 
 `--live` fails immediately if the key is missing, creates a fresh HydraDB client
-for the second session, waits for indexing, and only passes after all three facts
-are recalled. See the [90-second narrative](docs/DEMO.md) and
+for the second session, waits until each source is searchable, and only passes
+after three focused queries independently recall their required facts. See the
+[90-second narrative](docs/DEMO.md) and
 [verification report](docs/VERIFICATION.md).
+
+The strict live proof passed on July 18, 2026: real HydraDB, a fresh SDK client,
+the localhost `ternary-bonsai-27b-mlx` model, and no simulator fallback. The
+captured benchmark improved from **0/3 to 3/3**.
 
 The repository also includes a
 [sanitized host and failure capture](artifacts/host-and-failure-evidence.txt), so

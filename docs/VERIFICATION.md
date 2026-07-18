@@ -19,16 +19,18 @@ failure, then produces a grounded answer without sending generation to a cloud m
 | Context benchmark | Pass | Required facts improved from 0/3 to 3/3 |
 | Prompt boundary | Pass | Context capped and labeled `untrusted-evidence` |
 | Local response | Pass | Real model cited M4 Pro, 24 GB, and KV cache facts |
-| HydraDB cloud | Not run | No key is configured on this machine |
+| HydraDB cloud | Pass | Strict live run used database `hydra_mlx_context` and an isolated collection |
+| No-fallback guarantee | Pass | Run declared `MODE: LIVE · NO FALLBACK`; missing key is fatal |
 
 ## Observed local-model output
 
-> No, you should not retry the same configuration.
+> Based on the device profile and compatibility runbook, you should **not**
+> retry the same configuration.
 >
-> You are using an Apple **M4 Pro with 24 GB** of unified memory. The batched
-> vision path does not support **KV cache quantization**, and this model has
-> already failed to load twice due to the same conflict. Disable KV cache
-> quantization or use a compatible non-batched vision path.
+> The failure occurred on your Apple M4 Pro with 24 GB of unified memory because
+> the batched vision path does not support KV cache quantization. The runbook
+> explicitly states that you must **disable KV cache quantization** before
+> retrying, or alternatively use a compatible non-batched path.
 
 The measured hardware and two original failure timestamps are preserved in the
 [sanitized evidence capture](../artifacts/host-and-failure-evidence.txt).
@@ -36,13 +38,14 @@ The measured hardware and two original failure timestamps are preserved in the
 ## Automated evidence
 
 - `ruff check .`: passed
-- `pytest`: 29 tests passed
-- real local-model demo assertions: passed
+- `pytest`: 31 tests passed
+- strict real-HydraDB and real-local-model demo assertions: passed
 - non-loopback model URLs: rejected
 - denied content reaching a writable store: rejected
 - incomplete context benchmark: reports the missing fact labels
+- focused probes: prevent a similar runbook chunk from masking a missing failure Memory
 
-## Remaining external proof
+## Live proof command and observed result
 
 The implementation now has a strict proof command:
 
@@ -50,9 +53,21 @@ The implementation now has a strict proof command:
 HYDRA_DB_API_KEY=... ./demo/run.sh --live
 ```
 
-The command cannot silently substitute the lab store. It initializes HydraDB,
-queries a unique collection for the 0/3 baseline, ingests all three approved
-context classes, creates a new SDK client, polls until the complete 3/3 fact set
-is queryable, and then calls the local model with those exact retrieved chunks.
-The final competition recording is not complete until that command passes with
-a dedicated demo key.
+The command cannot silently substitute the lab store. On July 18, 2026 it:
+
+1. queried a unique collection and established a 0/3 cold baseline;
+2. ingested the device Memory, compatibility Knowledge, and inferred failure Memory;
+3. rejected a credential-shaped write before the Hydra adapter;
+4. observed Hydra indexing states and polled focused queries until each source's
+   required fact was searchable;
+5. created a fresh SDK client and scored 3/3; and
+6. passed the exact recalled chunks to the localhost model.
+
+The final line was:
+
+```text
+PROVEN LIVE: HydraDB database=hydra_mlx_context collection=local_mlx_troubleshooting_b5f37384db; fresh client recall; localhost generation; no simulator fallback.
+```
+
+The collection identifier is evidence, not a credential. No API key appears in
+the transcript or repository.

@@ -113,3 +113,25 @@ def test_ensure_database_creates_missing_database() -> None:
     )
     store.ensure_database(timeout_seconds=1)
     assert creates == [{"database": "new-db"}]
+
+
+def test_source_statuses_maps_v2_processing_fields() -> None:
+    store = object.__new__(HydraV2Store)
+    store.database = "db"
+    store.collection = "user"
+    store.client = SimpleNamespace(
+        context=SimpleNamespace(
+            status=lambda **_: SimpleNamespace(
+                data=SimpleNamespace(
+                    statuses=[
+                        SimpleNamespace(id="device", indexing_status="completed"),
+                        SimpleNamespace(id="runbook", indexing_status="graph_creation"),
+                    ]
+                )
+            )
+        )
+    )
+    assert store.source_statuses(["device", "runbook"]) == {
+        "device": "completed",
+        "runbook": "graph_creation",
+    }

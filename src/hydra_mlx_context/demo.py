@@ -11,7 +11,11 @@ from urllib.parse import urlparse
 import httpx
 from dotenv import load_dotenv
 
-from .benchmark import BenchmarkResult, score_troubleshooting_context
+from .benchmark import (
+    TROUBLESHOOTING_PROBES,
+    BenchmarkResult,
+    score_troubleshooting_probes,
+)
 from .hydra import HydraV2Store
 from .local_model import LocalOpenAIModel
 from .models import ContextChunk, ContextKind
@@ -90,23 +94,55 @@ def _hydra_store(*, token: str, database: str, collection: str) -> HydraV2Store:
     return HydraV2Store(token=token, database=database, collection=collection)
 
 
-def _recall_until_complete(
+def _probe_recall(
     store: DemoContextStore | HydraV2Store,
-    *,
-    timeout_seconds: int,
-) -> tuple[list[ContextChunk], BenchmarkResult]:
+) -> tuple[dict[str, list[ContextChunk]], BenchmarkResult]:
+    results = {label: list(store.recall(query)) for label, query in TROUBLESHOOTING_PROBES.items()}
+    return results, score_troubleshooting_probes(results)
+
+
+def _merge_probe_chunks(results: dict[str, list[ContextChunk]]) -> list[ContextChunk]:
+    merged: list[ContextChunk] = []
+    seen: set[tuple[str, str]] = set()
+    for chunks in results.values():
+        for chunk in chunks:
+            identity = (chunk.source_id, chunk.text)
+            if identity not in seen:
+                seen.add(identity)
+                merged.append(chunk)
+    return merged
+
+
+def _wait_for_searchable_context(
+    store: HydraV2Store, source_ids: list[str], *, timeout_seconds: int
+) -> None:
     deadline = time.monotonic() + timeout_seconds
-    latest_chunks: list[ContextChunk] = []
-    latest_result = score_troubleshooting_context([])
+    last_statuses: dict[str, str] | None = None
     while True:
-        latest_chunks = list(store.recall(DEMO_QUERY))
-        latest_result = score_troubleshooting_context(latest_chunks)
-        if latest_result.score == latest_result.total:
-            return latest_chunks, latest_result
+        statuses = store.source_statuses(source_ids)
+        if statuses != last_statuses:
+            summary = ", ".join(f"{source_id}={status}" for source_id, status in statuses.items())
+            print(f"      INDEXING         {summary}", flush=True)
+            last_statuses = statuses
+        failed = {
+            source_id: status
+            for source_id, status in statuses.items()
+            if status in {"errored", "error", "failed"}
+        }
+        if failed:
+            raise RuntimeError(f"HydraDB source processing failed: {failed}")
+        searchable = statuses and all(
+            status in {"graph_creation", "completed", "success"} for status in statuses.values()
+        )
+        if searchable:
+            _, result = _probe_recall(store)
+            if result.score == result.total:
+                return
         if time.monotonic() >= deadline:
-            missing = ", ".join(latest_result.missing)
-            raise TimeoutError(f"Context indexing did not expose required facts: {missing}")
-        time.sleep(3)
+            raise TimeoutError(
+                f"HydraDB sources did not become searchable for all focused probes: {last_statuses}"
+            )
+        time.sleep(5)
 
 
 def run_demo(
@@ -138,9 +174,10 @@ def run_demo(
         backend = DemoBackend()
         first_session = DemoContextStore(backend)
 
-    cold_result = score_troubleshooting_context(first_session.recall(DEMO_QUERY))
+    cold_probes, cold_result = _probe_recall(first_session)
     if cold_result.score:
         raise AssertionError("Isolated demo collection was not cold before ingestion")
+    assert not _merge_probe_chunks(cold_probes)
 
     print("HYDRA MLX TROUBLESHOOTER — COLD VS LEARNED DEMO")
     print(f"MODE: {mode.upper()}{' · NO FALLBACK' if mode == 'live' else ' · LAB SIMULATOR'}")
@@ -154,15 +191,18 @@ def run_demo(
         (COMPATIBILITY_RUNBOOK, ContextKind.KNOWLEDGE, False, "mlx_vlm_runbook"),
         (FAILURE_SIGNAL, ContextKind.MEMORY, True, "load_failure_outcome"),
     )
+    source_ids: list[str] = []
     for text, expected_kind, expected_infer, label in cases:
+        source_id = f"{label}_{run_id}"
         decision = ingest_approved(
             text,
             store=first_session,
-            source_id=f"{label}_{run_id}",
+            source_id=source_id,
             requested=expected_kind,
         )
         assert decision.kind is expected_kind
         assert decision.infer is expected_infer
+        source_ids.append(source_id)
     print("[3/7] CONTEXT LEARNING PASS  device + runbook + inferred load failure")
 
     secret = "api_key=super-secret-value"
@@ -182,16 +222,20 @@ def run_demo(
     print("[4/7] EGRESS GATE      PASS  credential denied before persistence")
 
     if mode == "live":
+        assert isinstance(first_session, HydraV2Store)
+        _wait_for_searchable_context(first_session, source_ids, timeout_seconds=900)
         second_session: DemoContextStore | HydraV2Store = _hydra_store(
             token=token, database=database, collection=run_collection
         )
-        recall_timeout = 150
     else:
         assert backend is not None
         second_session = DemoContextStore(backend)
-        recall_timeout = 0
 
-    recalled, warm_result = _recall_until_complete(second_session, timeout_seconds=recall_timeout)
+    warm_probes, warm_result = _probe_recall(second_session)
+    recalled = _merge_probe_chunks(warm_probes)
+    if warm_result.score != warm_result.total:
+        missing = ", ".join(warm_result.missing)
+        raise RuntimeError(f"Focused HydraDB recall missed required facts: {missing}")
     print(f"[5/7] FRESH SESSION    PASS  recalled {len(recalled)} context chunks")
     print(
         f"[6/7] CONTEXT BENCH    {cold_result.score}/{cold_result.total} → "
@@ -243,7 +287,7 @@ def main(argv: list[str] | None = None) -> int:
             database=os.environ.get("HYDRA_DATABASE", "hydra_mlx_context"),
             collection=os.environ.get("HYDRA_COLLECTION", "local_mlx_troubleshooting"),
         )
-    except RuntimeError as error:
+    except (RuntimeError, TimeoutError) as error:
         raise SystemExit(str(error)) from None
     return 0
 

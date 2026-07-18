@@ -1,37 +1,32 @@
 Hydra MLX Troubleshooter verification capture
-Run: ./demo/run.sh
-Mode: SIMULATED · LAB SIMULATOR
+Run: ./demo/run.sh --live
+Date: July 18, 2026
+Mode: LIVE · NO FALLBACK
 Machine: Apple M4 Pro · 24 GB unified memory
 Local server: LM Studio 0.4.19+2
 Loaded model: ternary-bonsai-27b-mlx
-Hydra credential: absent
+Hydra credential: configured locally and redacted
 
 HYDRA MLX TROUBLESHOOTER — COLD VS LEARNED DEMO
-MODE: SIMULATED · LAB SIMULATOR
+MODE: LIVE · NO FALLBACK
 [1/7] LOCAL MODEL      PASS  http://127.0.0.1:1234/v1 · ternary-bonsai-27b-mlx
 [2/7] COLD BASELINE    0/3  required facts available
 [3/7] CONTEXT LEARNING PASS  device + runbook + inferred load failure
 [4/7] EGRESS GATE      PASS  credential denied before persistence
+      INDEXING         device_profile_b5f37384db=queued, mlx_vlm_runbook_b5f37384db=queued, load_failure_outcome_b5f37384db=queued
+      INDEXING         device_profile_b5f37384db=graph_creation, mlx_vlm_runbook_b5f37384db=graph_creation, load_failure_outcome_b5f37384db=processing
+      INDEXING         device_profile_b5f37384db=graph_creation, mlx_vlm_runbook_b5f37384db=completed, load_failure_outcome_b5f37384db=graph_creation
 [5/7] FRESH SESSION    PASS  recalled 3 context chunks
 [6/7] CONTEXT BENCH    0/3 → 3/3  (device profile, compatibility runbook, prior failure)
 [7/7] LOCAL RESPONSE   PASS  answer cited all three learned facts
 
 MODEL OUTPUT
-No, you should not retry the same configuration. Based on your device profile and
-the compatibility runbook, the failure is caused by a specific incompatibility
-that will persist if you do not change settings.
+Based on the device profile and compatibility runbook, you should **not** retry the same configuration.
 
-Here are the facts from your context:
-* Device: You are using an Apple M4 Pro with 24 GB of unified memory.
-* The Issue: The batched vision path does not support KV cache quantization.
-* History: You have already seen this model fail to load twice due to this exact conflict.
-
-Recommendation: To resolve the loading failure, disable KV cache quantization
-before retrying. Alternatively, use a compatible non-batched vision path.
+The failure occurred on your Apple M4 Pro with 24 GB of unified memory because the batched vision path does not support KV cache quantization. The runbook explicitly states that you must **disable KV cache quantization** before retrying, or alternatively use a compatible non-batched path.
 
 DEMO RESULT: PASS
-LAB NOTE: context persistence used the deterministic simulator. Run
-./demo/run.sh --live for competition proof.
+PROVEN LIVE: HydraDB database=hydra_mlx_context collection=local_mlx_troubleshooting_b5f37384db; fresh client recall; localhost generation; no simulator fallback.
 
 Locally corroborated evidence:
 - `system_profiler`: Apple M4 Pro, 24 GB
@@ -39,10 +34,12 @@ Locally corroborated evidence:
   vision path does not support KV cache quantization
 - LM Studio localhost: actual `ternary-bonsai-27b-mlx` generation
 
-Contract-tested:
+Verified:
 - HydraDB 2.x Memory and Knowledge ingestion payloads
 - HydraDB 2.x response mapping
+- live HydraDB persistence and focused fresh-client recall
 - strict --live credential requirement and no silent fallback
 
 Not claimed:
-- a live HydraDB cloud write or recall; no HYDRA_DB_API_KEY was configured
+- that HydraDB persistence is local; approved context leaves the Mac
+- that graph enrichment was complete for every source when search became ready

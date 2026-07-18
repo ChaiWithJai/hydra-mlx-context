@@ -105,6 +105,43 @@ The device profile is already a durable fact, so `infer` is `false`. The runtime
 log is a raw, consented event from which HydraDB should derive a reusable outcome,
 so it uses `true`. Knowledge does not use the memory inference flag.
 
+## Wait until every fact is searchable
+
+Ingestion is asynchronous. Poll the source status rather than sleeping for a
+fixed interval. A source in `graph_creation` is searchable; `completed` means
+graph enrichment has also finished. Treat `errored`, `error`, or `failed` as a
+terminal failure, then verify readiness with the same focused queries your
+application depends on.
+
+```python
+import time
+
+source_ids = ["device_profile", "mlx_vlm_compatibility", "load_failure_outcome"]
+deadline = time.monotonic() + 900
+
+while time.monotonic() < deadline:
+    response = client.context.status(
+        database="local_assistant",
+        collection="user_jai",
+        ids=source_ids,
+    )
+    statuses = {item.id: item.indexing_status for item in response.data.statuses}
+    if any(status in {"errored", "error", "failed"} for status in statuses.values()):
+        raise RuntimeError(f"HydraDB indexing failed: {statuses}")
+    if len(statuses) == len(source_ids) and all(
+        status in {"graph_creation", "completed", "success"}
+        for status in statuses.values()
+    ):
+        break
+    time.sleep(5)
+else:
+    raise TimeoutError(f"HydraDB sources were not searchable: {statuses}")
+```
+
+Status is necessary but not sufficient for an application-level proof. Query
+the device, compatibility rule, and prior failure separately and assert that
+each result contains its own required fact before calling the workflow ready.
+
 ## Recall both stores
 
 ```python
