@@ -1,0 +1,14 @@
+.DS_Store
+.env
+.venv/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+dist/
+build/
+*.egg-info/
+
+# Never commit private design-review material or captured conversations.
+private/
+private-*.md
+captures/
