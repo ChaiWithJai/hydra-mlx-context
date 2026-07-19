@@ -8,11 +8,11 @@ persistence. Model generation stays local through
 
 This repository is a competition entry and an implementation companion for the
 [HydraDB × Docs hackathon](https://luma.com/event/evt-asAD7QFCSL8GKbf), running
-July 17–24, 2026. The submission fixes one complete developer journey:
+July 17 to 24, 2026. The submission fixes one complete developer journey:
 
 > Diagnose a local-model configuration using a measured device profile, a shared
 > compatibility runbook, and a real load failure learned from LM Studio
-> logs—without hiding which approved context leaves the Mac.
+> logs. The guide shows which approved context leaves the Mac.
 
 ## The proof, not the promise
 
@@ -121,6 +121,10 @@ secrets and does not upload files implicitly.
 
 ## Submission artifacts
 
+- [`SUBMISSION.md`](SUBMISSION.md): current status, remaining work, proof links,
+  and the final release checklist.
+- [`submission/`](submission/): recording script, pull request body, Discord post,
+  and organizer message.
 - [`contribution/local-model-context.mdx`](contribution/local-model-context.mdx):
   PR-ready Mintlify cookbook for the HydraDB docs.
 - [`docs/DECISIONS.md`](docs/DECISIONS.md): Memory/Knowledge and inference decision tables.

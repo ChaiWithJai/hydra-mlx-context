@@ -2,7 +2,7 @@
 
 ## Verified brief
 
-The HydraDB × Docs hackathon is virtual, runs July 17–24, 2026, and offers ten
+The HydraDB × Docs hackathon is virtual, runs July 17 to 24, 2026, and offers ten
 $50 awards. Participants must fork `usecortex/mintlify-docs`, use Mintlify,
 submit a pull request by July 24, and share it in the HydraDB Discord channel.
 The prompt is to pick a confusing developer journey and fix it completely.
@@ -51,21 +51,27 @@ local inference, and the policy gate makes that composition legible.
    by `CONTRIBUTING.md`.
 3. Fork `usecortex/mintlify-docs`; add the cookbook and navigation entry.
 4. Run Mintlify preview, link checks, repository checks, and DCO sign-off.
-5. Record a 60–90 second strict live demo: 0/3 cold baseline → ingest approved
-   Memory and Knowledge → fresh Hydra client → 3/3 recall → grounded local answer
-   → denied secret.
+5. Record a 60 to 90 second strict live demo. Show the 0/3 cold baseline,
+   approved Memory and Knowledge ingestion, fresh Hydra client, 3/3 recall,
+   grounded local answer, and denied secret.
 6. Submit the PR and post it in the event Discord channel before July 24.
 
 ## Acceptance checklist
 
-- [ ] A clean install works on Apple Silicon with Python 3.11+.
-- [ ] LM Studio localhost completion is demonstrated.
-- [ ] An MLX-native server configuration is documented.
-- [ ] Memory and Knowledge each have one successful live ingestion example.
-- [ ] `infer: true` and `infer: false` each have one justified example.
-- [ ] A likely secret is blocked before a network call.
-- [ ] A fresh Hydra client improves required-fact coverage from 0/3 to 3/3.
-- [ ] Recalled context is bounded and marked untrusted.
-- [ ] No private advisory content or implied endorsements are present.
+- [x] A new Python 3.11 environment installs the project and passes all checks.
+- [x] LM Studio localhost completion is demonstrated.
+- [ ] Add a complete `mlx_lm.server` setup example if the upstream reviewer requests it.
+- [x] Memory and Knowledge each have one successful live ingestion example.
+- [x] `infer: true` and `infer: false` each have one justified example.
+- [x] A likely secret is blocked before a network call.
+- [x] A fresh Hydra client improves required fact coverage from 0/3 to 3/3.
+- [x] Recalled context is bounded and marked untrusted.
+- [x] No private advisory content or implied endorsements are present.
 - [ ] The Mintlify page renders and links only to current v2 primitives.
-- [ ] The upstream issue, PR, DCO sign-off, and Discord submission are complete.
+- [x] The upstream issue is open.
+- [ ] A maintainer has acknowledged the issue.
+- [ ] The upstream pull request and DCO sign off are complete.
+- [ ] The submission video is uploaded.
+- [ ] The Discord submission is posted.
+
+Use [`SUBMISSION.md`](../SUBMISSION.md) as the current source of truth.
